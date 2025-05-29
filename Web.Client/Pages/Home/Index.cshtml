@@ -1,0 +1,319 @@
+﻿@page
+@model Web.Client.Pages.Home.IndexModel
+@{
+    ViewData["Title"] = "聊天系统";
+}
+
+<div class="chat-container">
+    <!-- 添加当前用户ID的隐藏字段 -->
+    <input type="hidden" id="currentUserId" value="@Model.CurrentUser.UserId" />
+
+    <!-- 左侧联系人列表 -->
+    <div class="contact-list">
+        <ul class="nav nav-tabs" id="contactTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="friends-tab" data-bs-toggle="tab" data-bs-target="#friends" type="button" role="tab" aria-controls="friends" aria-selected="true">好友</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="groups-tab" data-bs-toggle="tab" data-bs-target="#groups" type="button" role="tab" aria-controls="groups" aria-selected="false">群组</button>
+            </li>
+        </ul>
+        <div class="tab-content" id="contactTabContent">
+            <!-- 好友列表 -->
+            <div class="tab-pane fade show active" id="friends" role="tabpanel" aria-labelledby="friends-tab">
+                <div class="list-group contact-items">
+                    @foreach (var friend in Model.Friends)
+                    {
+                        <a asp-page="/Home/Index" asp-route-friendId="@friend.FriendId"
+                           class="list-group-item list-group-item-action @(Model.SelectedFriendId == friend.FriendId ? "active" : "")">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@(friend.DisplayName ?? friend.UserName)</h6>
+                            </div>
+                        </a>
+                    }
+                </div>
+                <div class="contact-actions">
+                    <a asp-page="/Friends/Add" class="btn btn-sm btn-primary">添加好友</a>
+                    <a asp-page="/Friends/Requests" class="btn btn-sm btn-outline-primary">好友请求</a>
+                </div>
+            </div>
+
+            <!-- 群组列表 -->
+            <div class="tab-pane fade" id="groups" role="tabpanel" aria-labelledby="groups-tab">
+                <div class="list-group contact-items">
+                    @foreach (var group in Model.Groups)
+                    {
+                        <a asp-page="/Home/Index" asp-route-groupId="@group.Id"
+                           class="list-group-item list-group-item-action @(Model.SelectedGroupId == group.Id ? "active" : "")">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@group.GroupName</h6>
+                            </div>
+                        </a>
+                    }
+                </div>
+                <div class="contact-actions">
+                    <a asp-page="/Groups/Create" class="btn btn-sm btn-primary">创建群聊</a>
+                    <a asp-page="/Groups/Join" class="btn btn-sm btn-outline-primary">加入群聊</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧聊天区域 -->
+    <div class="chat-area">
+        <!-- 聊天头部 -->
+        <div class="chat-header">
+            @if (Model.SelectedFriendId.HasValue)
+            {
+                <h5>与 @Model.SelectedFriendName 的聊天</h5>
+            }
+            else if (Model.SelectedGroupId.HasValue)
+            {
+                <h5>群聊：@Model.SelectedGroupName</h5>
+            }
+            else
+            {
+                <h5>请选择一个聊天</h5>
+            }
+
+            <div class="btn-group">
+                <a asp-page="/Files/Index" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i> 文件
+                </a>
+                <a asp-page="/History/Index" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-clock-history"></i> 历史
+                </a>
+            </div>
+        </div>
+
+        <!-- 修改消息容器部分，支持文件类型消息 -->
+        <div class="message-container">
+            @foreach (var message in Model.Messages)
+            {
+                <div class="message @(message.IsFromCurrentUser ? "message-sent" : "message-received")">
+                    <div class="message-content">
+                        @if (message.MessageType == "Text")
+                        {
+                            <!-- 普通文本消息 -->
+                            <div class="message-text">@message.Content</div>
+                        }
+                        else if (message.MessageType == "File")
+                        {
+                            <!-- 文件消息 -->
+                            <div class="message-file">
+                                <i class="bi bi-file-earmark"></i>
+                                <a asp-page="/Files/Download" asp-route-fileId="@message.FileId" target="_blank">
+                                    @message.Content
+                                </a>
+                            </div>
+                        }
+                        <div class="message-time">@message.SentAt.ToLocalTime().ToString("HH:mm:ss")</div>
+                        @if (!string.IsNullOrEmpty(message.SenderName) && !message.IsFromCurrentUser)
+                        {
+                            <div class="message-sender">@message.SenderName</div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+
+        <!-- 消息输入区域 -->
+        @if (Model.SelectedFriendId.HasValue || Model.SelectedGroupId.HasValue)
+        {
+            <form id="messageForm" class="message-input" onsubmit="sendMessage(event)">
+                <div class="input-group">
+                    <input type="text" id="messageContent" class="form-control" placeholder="输入消息..." autocomplete="off">
+                    <a href="#" class="btn btn-outline-secondary" onclick="openFileUpload(); return false;">
+                        <i class="bi bi-paperclip"></i>
+                    </a>
+                    <button type="submit" class="btn btn-primary">发送</button>
+                </div>
+            </form>
+        }
+
+        <script>
+            function openFileUpload() {
+                const friendId = '@Model.SelectedFriendId';
+                const groupId = '@Model.SelectedGroupId';
+                let url = '/Files/Upload';
+
+                // 添加查询参数，以便上传页面知道要发送给谁
+                if (friendId && friendId !== 'null') {
+                    url += '?receiverType=friend&friendId=' + friendId;
+                } else if (groupId && groupId !== 'null') {
+                    url += '?receiverType=group&groupId=' + groupId;
+                }
+
+                window.location.href = url;
+            }
+        </script>
+
+        <script>
+            function sendMessage(event) {
+                event.preventDefault();
+
+                const messageContent = document.getElementById('messageContent').value.trim();
+                if (!messageContent) return;
+
+                const friendId = '@Model.SelectedFriendId';
+                const groupId = '@Model.SelectedGroupId';
+                const currentUserId = document.getElementById('currentUserId').value;
+                const currentUserName = '@Model.CurrentUser.DisplayName';
+
+                // 发送消息到服务器
+                if (friendId && friendId !== 'null') {
+                    // 发送私聊消息
+                    fetch('@ApiConfig.Messages.Send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + '@HttpContext.Session.GetString("Token")'
+                        },
+                        body: JSON.stringify({
+                            SenderId: parseInt(currentUserId),
+                            ReceiverId: parseInt(friendId),
+                            Content: messageContent,
+                            MessageType: 'Text'
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('发送消息失败');
+                        }
+                        // 清空输入框
+                        document.getElementById('messageContent').value = '';
+                    })
+                    .catch(error => {
+                        console.error('发送消息错误:', error);
+                        alert('发送消息失败，请重试');
+                    });
+                }
+                else if (groupId && groupId !== 'null') {
+                    // 发送群聊消息
+                    fetch('@ApiConfig.Messages.Send', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + '@HttpContext.Session.GetString("Token")'
+                        },
+                        body: JSON.stringify({
+                            SenderId: parseInt(currentUserId),
+                            GroupId: parseInt(groupId),
+                            ReceiverId: null,
+                            Content: messageContent,
+                            MessageType: 'Text'
+                        })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('发送消息失败');
+                        }
+                        // 清空输入框
+                        document.getElementById('messageContent').value = '';
+                    })
+                    .catch(error => {
+                        console.error('发送消息错误:', error);
+                        alert('发送消息失败，请重试');
+                    });
+                }
+            }
+        </script>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        // 页面加载完成后滚动到最新消息
+        document.addEventListener('DOMContentLoaded', function() {
+            var messageContainer = document.querySelector('.message-container');
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+
+            // 初始化 SignalR 连接
+            initializeSignalR();
+        });
+
+        let connection;
+
+        function initializeSignalR() {
+            // 创建连接
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("https://localhost:5284/chatHub")
+                .withAutomaticReconnect()
+                .build();
+
+                    // 监听接收消息事件
+        connection.on("ReceiveMessage", function (content, senderId, senderName, sentAt) {
+            // 获取当前用户ID (从某处获取，这里假设有个隐藏字段)
+            const currentUserId = parseInt(document.getElementById('currentUserId').value);
+
+            // 创建新消息元素
+            const messageDiv = document.createElement('div');
+            const isFromCurrentUser = senderId === currentUserId;
+            messageDiv.className = `message ${isFromCurrentUser ? 'message-sent' : 'message-received'}`;
+
+            // 设置消息内容
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div class="message-text">${content}</div>
+                    <div class="message-time">${new Date(sentAt).toLocaleTimeString()}</div>
+                    ${!isFromCurrentUser ? `<div class="message-sender">${senderName}</div>` : ''}
+                </div>
+            `;
+
+            // 添加到消息容器
+            const messageContainer = document.querySelector('.message-container');
+            messageContainer.appendChild(messageDiv);
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        });
+
+            // 启动连接
+            connection.start()
+                .then(() => {
+                    console.log("SignalR 连接已建立");
+
+                    // 加入当前聊天
+                    joinCurrentChat();
+                })
+                .catch(err => {
+                    console.error("SignalR 连接错误:", err);
+                });
+
+            // 页面卸载前断开连接
+            window.addEventListener('beforeunload', () => {
+                leaveCurrentChat();
+                connection.stop();
+            });
+        }
+
+        function joinCurrentChat() {
+            const friendId = '@Model.SelectedFriendId';
+            const groupId = '@Model.SelectedGroupId';
+            const currentUserId = document.getElementById('currentUserId').value;
+
+            if (friendId && friendId !== 'null') {
+                // 加入私聊
+                connection.invoke("JoinChat", `private_${currentUserId}_${friendId}`);
+            } else if (groupId && groupId !== 'null') {
+                // 加入群聊
+                connection.invoke("JoinChat", `group_${groupId}`);
+            }
+        }
+
+        function leaveCurrentChat() {
+            const friendId = '@Model.SelectedFriendId';
+            const groupId = '@Model.SelectedGroupId';
+            const currentUserId = document.getElementById('currentUserId').value;
+
+            if (friendId && friendId !== 'null') {
+                // 离开私聊
+                connection.invoke("LeaveChat", `private_${currentUserId}_${friendId}`);
+            } else if (groupId && groupId !== 'null') {
+                // 离开群聊
+                connection.invoke("LeaveChat", `group_${groupId}`);
+            }
+        }
+    </script>
+}

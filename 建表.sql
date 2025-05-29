@@ -1,0 +1,71 @@
+CREATE TABLE Users (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    UserName VARCHAR(50) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(255) NOT NULL,
+    DisplayName VARCHAR(50),
+    Email VARCHAR(100),
+    IsApproved BOOLEAN DEFAULT FALSE, -- 管理员审核
+    IsBanned BOOLEAN DEFAULT FALSE,   -- 是否被禁用
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Friends (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    UserId INT NOT NULL,
+    FriendId INT NOT NULL,
+    Status ENUM('Pending', 'Accepted', 'Rejected') DEFAULT 'Pending',
+    RequestedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    RespondedAt DATETIME,
+    CONSTRAINT FK_User FOREIGN KEY (UserId) REFERENCES Users(Id),
+    CONSTRAINT FK_Friend FOREIGN KEY (FriendId) REFERENCES Users(Id)
+);
+
+CREATE TABLE chatGroups(
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    GroupName VARCHAR(100) NOT NULL,
+    OwnerId INT NOT NULL,
+    CreatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_GroupOwner FOREIGN KEY (OwnerId) REFERENCES Users(Id)
+);
+
+CREATE TABLE GroupMembers (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    GroupId INT NOT NULL,
+    UserId INT NOT NULL,
+    JoinedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_Group FOREIGN KEY (GroupId) REFERENCES chatGroups(Id),
+    CONSTRAINT FK_GroupUser FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+CREATE TABLE Files (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    FileName VARCHAR(255) NOT NULL,
+    FilePath VARCHAR(500) NOT NULL,
+    UploadedBy INT NOT NULL,
+    UploadedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT FK_FileUser FOREIGN KEY (UploadedBy) REFERENCES Users(Id)
+);
+
+CREATE TABLE Messages (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    SenderId INT NOT NULL,
+    ReceiverId INT,         -- 好友聊天时用
+    GroupId INT,            -- 群聊时用
+    Content TEXT,
+    MessageType ENUM('Text', 'File') DEFAULT 'Text',
+    FileId INT,             -- 文件消息时用
+    SentAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    IsDeleted BOOLEAN DEFAULT FALSE,
+    CONSTRAINT FK_Sender FOREIGN KEY (SenderId) REFERENCES Users(Id),
+    CONSTRAINT FK_Receiver FOREIGN KEY (ReceiverId) REFERENCES Users(Id),
+    CONSTRAINT FK_GroupMsg FOREIGN KEY (GroupId) REFERENCES chatGroups(Id),
+    CONSTRAINT FK_File FOREIGN KEY (FileId) REFERENCES Files(Id)
+);
+
+
+
+CREATE TABLE Admins (
+    Id INT PRIMARY KEY AUTO_INCREMENT,
+    UserId INT NOT NULL UNIQUE,
+    CONSTRAINT FK_AdminUser FOREIGN KEY (UserId) REFERENCES Users(Id)
+);

@@ -1,0 +1,105 @@
+<Window x:Class="Desktop.Client.Views.HistoryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="历史信息" Height="450" Width="600" WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <Style x:Key="WindowStyle" TargetType="Window">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#DDDDDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="10">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 聊天类型选择 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+            <RadioButton x:Name="FriendRadio" Content="好友聊天" IsChecked="True" 
+                         Margin="0,0,15,0" Checked="ChatType_Changed"/>
+            <RadioButton x:Name="GroupRadio" Content="群组聊天" 
+                         Checked="ChatType_Changed"/>
+        </StackPanel>
+
+        <!-- 好友/群组选择和日期选择 -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" Style="{StaticResource TextBlockStyle}" 
+                      VerticalAlignment="Center" Margin="0,0,5,0">
+                <Run Text="选择"/>
+                <Run x:Name="SelectionTypeText" Text="好友"/>
+                <Run Text=":"/>
+            </TextBlock>
+
+            <!-- 好友下拉框 -->
+            <ComboBox Grid.Column="1" x:Name="FriendComboBox" 
+                     DisplayMemberPath="DisplayName" 
+                     SelectedValuePath="FriendId"
+                     Margin="0,0,15,0" 
+                     Width="120" HorizontalAlignment="Left"/>
+
+            <!-- 群组下拉框 -->
+            <ComboBox Grid.Column="1" x:Name="GroupComboBox" 
+                     DisplayMemberPath="Name" 
+                     SelectedValuePath="Id"
+                     Margin="0,0,15,0" Visibility="Collapsed"
+                     Width="120" HorizontalAlignment="Left"/>
+
+            <TextBlock Grid.Column="2" Style="{StaticResource TextBlockStyle}" 
+                      VerticalAlignment="Center"
+                      Text="日期范围:"/>
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal">
+                <DatePicker x:Name="StartDate" 
+                           Width="100" 
+                           Margin="5,0,5,0" 
+                           Style="{StaticResource InputBoxStyle}"/>
+                <TextBlock Text="-" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                <DatePicker x:Name="EndDate" 
+                           Width="100" 
+                           Margin="0,0,5,0" 
+                           Style="{StaticResource InputBoxStyle}"/>
+            </StackPanel>
+
+            <Button Grid.Column="4" Content="查询" 
+                    Width="80" 
+                    Style="{StaticResource ButtonStyle}" 
+                    Click="Search_Click"/>
+        </Grid>
+
+        <!-- 消息列表 -->
+        <DataGrid Grid.Row="2" x:Name="HistoryGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                  BorderBrush="{DynamicResource MainColor}" BorderThickness="1">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="发送者" Binding="{Binding SenderName}" Width="100"/>
+                <DataGridTextColumn Header="时间" Binding="{Binding SentAt, StringFormat=yyyy-MM-dd HH:mm:ss}" Width="150"/>
+                <DataGridTextColumn Header="内容" Binding="{Binding Content}" Width="*"/>
+                <DataGridTextColumn Header="类型" Binding="{Binding MessageType}" Width="80"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- 底部按钮 -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="删除选中" Width="80" Style="{StaticResource ButtonStyle}" Click="Delete_Click" Margin="0,0,10,0"/>
+            <Button Content="关闭" Width="80" Style="{StaticResource BorderButtonStyle}" Click="Close_Click">
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

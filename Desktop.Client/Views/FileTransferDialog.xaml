@@ -1,0 +1,106 @@
+<Window x:Class="Desktop.Client.Views.FileTransferDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="文件传输" Height="450" Width="600" WindowStartupLocation="CenterOwner">
+    <!-- 保留原有样式 -->
+    <Grid Margin="20">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <!-- 新增接收者选择区域 -->
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 保留原有标题 -->
+        <TextBlock Grid.Row="0"
+                   Style="{StaticResource TextBlockStyle}"
+                   FontSize="24" 
+                   FontWeight="Bold" 
+                   HorizontalAlignment="Center" 
+                   Margin="0,0,0,20"
+                   Text="文件传输"/>
+
+        <!-- 保留原有文件选择部分 -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="FilePathBox" 
+                     Height="40" 
+                     Padding="10,0" 
+                     FontSize="14"
+                     IsReadOnly="True"
+                     Style="{StaticResource InputBoxStyle}"
+                     Margin="0,0,10,0"/>
+            <Button Grid.Column="1" 
+                    Content="浏览..." 
+                    Width="100" 
+                    Height="40"
+                    Style="{StaticResource ButtonStyle}"
+                    Click="Browse_Click"/>
+        </Grid>
+
+        <!-- 新增接收者选择部分 -->
+        <Grid Grid.Row="2" Margin="0,0,0,20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                <RadioButton x:Name="FriendRadio" Content="发送给好友" IsChecked="True" Margin="0,0,20,0" 
+                             Checked="ReceiverType_Changed"/>
+                <RadioButton x:Name="GroupRadio" Content="发送给群组" 
+                             Checked="ReceiverType_Changed"/>
+            </StackPanel>
+
+            <Grid Grid.Row="1">
+                <ComboBox x:Name="FriendComboBox" DisplayMemberPath="DisplayName" Visibility="Visible" 
+                          Height="40" Padding="10,0" FontSize="14"/>
+                <ComboBox x:Name="GroupComboBox" DisplayMemberPath="Name" Visibility="Collapsed"
+                          Height="40" Padding="10,0" FontSize="14"/>
+            </Grid>
+        </Grid>
+
+        <!-- 保留原有文件列表 -->
+        <ListView x:Name="FileListView" 
+                  Grid.Row="3" 
+                  Margin="0,0,0,20"
+                  BorderThickness="1"
+                  BorderBrush="{DynamicResource MainColor}"
+                  Background="White">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="文件名" Width="250" DisplayMemberBinding="{Binding FileName}"/>
+                    <GridViewColumn Header="大小" Width="100" DisplayMemberBinding="{Binding FileSize}"/>
+                    <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding Status}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+        <!-- 保留原有按钮 -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Content="发送" 
+                    Width="120" 
+                    Height="40" 
+                    Margin="0,0,10,0"
+                    Style="{StaticResource ButtonStyle}"
+                    Click="Send_Click"/>
+            <Button Content="取消" 
+                    Width="120" 
+                    Height="40"
+                    Style="{StaticResource BorderButtonStyle}"
+                    Click="Cancel_Click">
+                <Button.ContentTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </DataTemplate>
+                </Button.ContentTemplate>
+            </Button>
+        </StackPanel>
+    </Grid>
+</Window>

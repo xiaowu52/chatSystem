@@ -1,0 +1,150 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/* 消息容器样式 */
+.message-container {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    overflow-y: auto;
+    height: calc(100vh - 230px);
+    background-color: #f8f9fa;
+}
+
+/* 基础消息样式 */
+.message {
+    display: flex;
+    margin-bottom: 10px;
+    max-width: 80%;
+}
+
+/* 发送的消息（右侧对齐） */
+.message-sent {
+    align-self: flex-end;
+}
+
+/* 接收的消息（左侧对齐） */
+.message-received {
+    align-self: flex-start;
+}
+
+/* 消息内容容器 */
+.message-content {
+    padding: 10px 15px;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 发送的消息内容样式 */
+.message-sent .message-content {
+    background-color: #dcf8c6;
+    border-bottom-right-radius: 4px;
+}
+
+/* 接收的消息内容样式 */
+.message-received .message-content {
+    background-color: white;
+    border-bottom-left-radius: 4px;
+}
+
+/* 消息文本样式 */
+.message-text {
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+/* 发送时间样式 */
+.message-time {
+    font-size: 0.75rem;
+    color: #999;
+    text-align: right;
+}
+
+/* 聊天区域整体样式 */
+.chat-area {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex-grow:1;
+    border-left: 1px solid #dee2e6;
+}
+
+/* 聊天头部样式 */
+.chat-header {
+    padding: 15px;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* 消息输入区域样式 */
+.message-input {
+    padding: 15px;
+    border-top: 1px solid #dee2e6;
+    background-color: white;
+}
+
+/* 联系人列表容器 */
+.contact-list {
+    width: 300px;
+    border-right: 1px solid #dee2e6;
+    background-color: white;
+}
+
+/* 联系人项目容器 */
+.contact-items {
+    height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+/* 聊天主容器样式 */
+.chat-container {
+    display: flex;
+    height: calc(100vh - 90px);
+    margin: -15px;
+    max-width:100%
+}
+
+/* 添加文件消息样式 */
+.message-file {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .message-file i {
+        font-size: 1.2rem;
+    }
+
+    .message-file a {
+        color: #0d6efd;
+        text-decoration: underline;
+        word-break: break-all;
+    }
+
+        .message-file a:hover {
+            color: #0a58ca;
+            text-decoration: none;
+        }
+

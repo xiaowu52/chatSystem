@@ -1,0 +1,44 @@
+﻿@page
+@model Web.Client.Pages.Groups.JoinModel
+@{
+    ViewData["Title"] = "加入群聊";
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">加入群聊</h4>
+            <a asp-page="/Home/Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回</a>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success">
+                    @Model.SuccessMessage
+                    <div class="mt-2">
+                        <a asp-page="/Home/Index" class="btn btn-primary">返回主页</a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                }
+
+                <form method="post">
+                    <div class="mb-3">
+                        <label asp-for="GroupId" class="form-label">群聊ID</label>
+                        <input asp-for="GroupId" class="form-control" placeholder="请输入要加入的群聊ID" required />
+                        <div class="form-text">请向群管理员获取群聊ID</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">加入群聊</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

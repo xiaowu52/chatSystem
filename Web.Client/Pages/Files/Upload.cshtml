@@ -1,0 +1,154 @@
+﻿@page
+@model Web.Client.Pages.Files.UploadModel
+@{
+    ViewData["Title"] = "文件上传";
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">文件上传</h4>
+            <a asp-page="/Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回</a>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success">
+                    @Model.SuccessMessage
+                    <div class="mt-2">
+                        @if (Model.ReceiverType == "friend" && Model.FriendId.HasValue)
+                        {
+                            <a asp-page="/Home/Index" asp-route-friendId="@Model.FriendId" class="btn btn-primary">
+                                返回聊天
+                            </a>
+                        }
+                        else if (Model.ReceiverType == "group" && Model.GroupId.HasValue)
+                        {
+                            <a asp-page="/Home/Index" asp-route-groupId="@Model.GroupId" class="btn btn-primary">
+                                返回聊天
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-page="/Home/Index" class="btn btn-primary">返回主页</a>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger">@Model.ErrorMessage</div>
+                }
+
+                <form method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">选择文件</label>
+                        <input type="file" name="file" class="form-control" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">发送给</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="receiverType" value="friend" id="friendRadio" checked>
+                            <label class="form-check-label" for="friendRadio">
+                                好友
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="receiverType" value="group" id="groupRadio">
+                            <label class="form-check-label" for="groupRadio">
+                                群组
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="friendSelector" class="mb-3">
+                        <label class="form-label">选择好友</label>
+                        <select name="friendId" class="form-select">
+                            @foreach (var friend in Model.Friends)
+                            {
+                                <option value="@friend.FriendId">@(friend.DisplayName ?? friend.UserName)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div id="groupSelector" class="mb-3" style="display: none;">
+                        <label class="form-label">选择群组</label>
+                        <select name="groupId" class="form-select">
+                            @foreach (var group in Model.Groups)
+                            {
+                                <option value="@group.Id">@group.GroupName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">上传并发送</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const friendRadio = document.getElementById('friendRadio');
+            const groupRadio = document.getElementById('groupRadio');
+            const friendSelector = document.getElementById('friendSelector');
+            const groupSelector = document.getElementById('groupSelector');
+
+            friendRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    friendSelector.style.display = 'block';
+                    groupSelector.style.display = 'none';
+                }
+            });
+
+            groupRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    friendSelector.style.display = 'none';
+                    groupSelector.style.display = 'block';
+                }
+            });
+
+            // 根据URL参数设置预选值
+        @if (ViewData.ContainsKey("PreSelectedReceiverType"))
+        {
+            <text>
+                    const preSelectedType = '@ViewData["PreSelectedReceiverType"]';
+                    if (preSelectedType === 'friend') {
+                        friendRadio.checked = true;
+                        groupRadio.checked = false;
+                        friendSelector.style.display = 'block';
+                        groupSelector.style.display = 'none';
+
+                @if (ViewData.ContainsKey("PreSelectedFriendId"))
+                {
+                    <text>
+                                const preSelectedFriendId = @ViewData["PreSelectedFriendId"];
+                                document.querySelector('select[name="friendId"]').value = preSelectedFriendId;
+                    </text>
+                }
+                    } else if (preSelectedType === 'group') {
+                        friendRadio.checked = false;
+                        groupRadio.checked = true;
+                        friendSelector.style.display = 'none';
+                        groupSelector.style.display = 'block';
+
+                @if (ViewData.ContainsKey("PreSelectedGroupId"))
+                {
+                    <text>
+                                const preSelectedGroupId = @ViewData["PreSelectedGroupId"];
+                                document.querySelector('select[name="groupId"]').value = preSelectedGroupId;
+                    </text>
+                }
+                    }
+            </text>
+        }
+        });
+    </script>
+}

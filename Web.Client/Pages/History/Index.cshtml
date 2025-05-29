@@ -1,0 +1,171 @@
+﻿@page
+@model Web.Client.Pages.History.IndexModel
+@{
+    ViewData["Title"] = "聊天历史";
+}
+
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">聊天历史</h4>
+            <a asp-page="/Home/Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> 返回</a>
+        </div>
+        <div class="card-body">
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="alert alert-success">@Model.SuccessMessage</div>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+
+            <!-- 筛选选项 -->
+            <form id="historyForm" method="get" class="mb-4">
+                <div class="row g-3 align-items-center">
+                    <div class="col-auto">
+                        <label class="col-form-label">类型</label>
+                    </div>
+                    <div class="col-auto">
+                        <select name="type" class="form-select" id="type-select">
+                            <option value="friend" selected="@(Model.Type == "friend")">私聊历史</option>
+                            <option value="group" selected="@(Model.Type == "group")">群聊历史</option>
+                        </select>
+                    </div>
+
+                    @if (Model.Type == "friend")
+                    {
+                        <div class="col-auto">
+                            <label class="col-form-label">好友</label>
+                        </div>
+                        <div class="col-auto">
+                            <select name="friendId" class="form-select" id="friend-select">
+                                <option value="">-- 选择好友 --</option>
+                                @foreach (var friend in Model.Friends)
+                                {
+                                    <option value="@friend.FriendId" selected="@(Model.SelectedFriendId == friend.FriendId)">
+                                        @(friend.DisplayName ?? friend.UserName)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="col-auto">
+                            <label class="col-form-label">群组</label>
+                        </div>
+                        <div class="col-auto">
+                            <select name="groupId" class="form-select" id="group-select">
+                                <option value="">-- 选择群组 --</option>
+                                @foreach (var group in Model.Groups)
+                                {
+                                    <option value="@group.Id" selected="@(Model.SelectedGroupId == group.Id)">
+                                        @group.GroupName
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    <div class="col-auto">
+                        <button type="submit" id="queryBtn" class="btn btn-primary">查询</button>
+                        <div id="loadingSpinner" style="display:none" class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div id="messagesContainer">
+                <!-- 消息列表 -->
+                @if (Model.Messages.Count > 0)
+                {
+                    <div class="list-group">
+                        @foreach (var message in Model.Messages)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">@message.SenderName</h6>
+                                    <small>@message.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</small>
+                                </div>
+                                <p class="mb-1">@message.Content</p>
+                                @if (message.IsFromCurrentUser)
+                                {
+                                    <form method="post" asp-page-handler="DeleteMessage" class="mt-2">
+                                        <input type="hidden" name="messageId" value="@message.Id" />
+                                        <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                                    </form>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+                else if (Model.SelectedFriendId.HasValue || Model.SelectedGroupId.HasValue)
+                {
+                    <div class="alert alert-info">
+                        没有找到历史消息
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('type-select').addEventListener('change', function() {
+        this.form.submit();
+    });
+
+    // 添加查询按钮的点击事件处理
+    document.getElementById('historyForm').addEventListener('submit', function(e) {
+        // 防止表单提交导致页面刷新
+        e.preventDefault();
+
+        // 显示加载状态
+        document.getElementById('queryBtn').disabled = true;
+        document.getElementById('loadingSpinner').style.display = 'inline-block';
+
+        // 获取表单数据
+        const formData = new FormData(this);
+        const queryParams = new URLSearchParams(formData).toString();
+
+        // 更新 URL 以便刷新时保留选择
+        window.history.pushState({}, '', '?' + queryParams);
+
+        // 发送 AJAX 请求
+        fetch(window.location.pathname + '?' + queryParams, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.text();
+        })
+        .then(html => {
+            // 从返回的HTML中提取消息部分
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const messagesContent = doc.getElementById('messagesContainer').innerHTML;
+
+            // 更新消息列表
+            document.getElementById('messagesContainer').innerHTML = messagesContent;
+
+            // 恢复查询按钮状态
+            document.getElementById('queryBtn').disabled = false;
+            document.getElementById('loadingSpinner').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('查询出错:', error);
+            alert('查询历史记录时发生错误，请重试');
+
+            // 恢复查询按钮状态
+            document.getElementById('queryBtn').disabled = false;
+            document.getElementById('loadingSpinner').style.display = 'none';
+        });
+    });
+</script>

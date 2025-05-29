@@ -1,0 +1,33 @@
+﻿@model Web.Client.Pages.History.IndexModel
+
+<div id="messagesContainer">
+    <!-- 消息列表 -->
+    @if (Model.Messages.Count > 0)
+    {
+        <div class="list-group">
+            @foreach (var message in Model.Messages)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">@message.SenderName</h6>
+                        <small>@message.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</small>
+                    </div>
+                    <p class="mb-1">@message.Content</p>
+                    @if (message.IsFromCurrentUser)
+                    {
+                        <form method="post" asp-page-handler="DeleteMessage" class="mt-2">
+                            <input type="hidden" name="messageId" value="@message.Id" />
+                            <button type="submit" class="btn btn-sm btn-danger">删除</button>
+                        </form>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else if (Model.SelectedFriendId.HasValue || Model.SelectedGroupId.HasValue)
+    {
+        <div class="alert alert-info">
+            没有找到历史消息
+        </div>
+    }
+</div>
